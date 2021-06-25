@@ -60,6 +60,13 @@ contract SmartWords is ERC721 {
     return true;
   }
 
+  function changePosition(address owner, uint position, uint newPosition) public returns (bool) {
+    uint id = idOf(owner, position);
+    _textsId[msg.sender][position] = 0;
+    _textsId[msg.sender][newPosition] = id;
+    return true;
+  }
+
   function _createText(address sender, uint position, string memory text, uint id) private returns (bool) {
     _textsId[sender][position] = id;
     _textsData[id] = Text({
