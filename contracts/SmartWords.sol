@@ -53,6 +53,14 @@ contract SmartWords is ERC721 {
 
   function transferOwnership(address newOwner, uint position) public returns (bool) {
     require(msg.sender == ownerOf(idOf(msg.sender, position)), "SmartsWords: sender is not owner of this nft");
+    uint newPosition = balanceOf(newOwner) + 1;
+    for (uint i = 1; i <  balanceOf(newOwner); i++) {
+      if (idOf(newOwner, i) == 0) {
+        newPosition = i;
+        continue;
+      }
+    }
+    require(_textsId[newOwner][newPosition] == 0, "SmartsWords: error to find a new position");
     uint id = idOf(msg.sender, position);
     _textsId[msg.sender][position] = 0;
     _textsId[newOwner][balanceOf(newOwner) + 1] = id;
