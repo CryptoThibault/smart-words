@@ -7,7 +7,6 @@ struct Text {
   string text;
   address author;
   uint timestamp;
-  uint id;
   bytes32 key;
 }
 
@@ -60,7 +59,7 @@ contract SmartWords is ERC721 {
         continue;
       }
     }
-    require(_textsId[newOwner][newPosition] == 0, "SmartsWords: error to find a new position");
+    require(_textsId[newOwner][newPosition] == 0, "SmartsWords: error when try to find a new position");
     uint id = idOf(msg.sender, position);
     _textsId[msg.sender][position] = 0;
     _textsId[newOwner][balanceOf(newOwner) + 1] = id;
@@ -81,7 +80,6 @@ contract SmartWords is ERC721 {
       text: text,
       author: sender,
       timestamp: block.timestamp,
-      id: id,
       key: keccak256("KEY")
     });
     return true;
