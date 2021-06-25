@@ -2,62 +2,70 @@
 pragma solidity ^0.8.5;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
 
 struct Text {
   string text;
   address author;
   uint timestamp;
+  uint id;
   bytes32 key;
 }
 
-contract SmartWords is ERC721, AccessControl {
-  mapping(uint => Text) private _texts;
-  uint private _id;
+contract SmartWords is ERC721 {
+  mapping(address => mapping(uint => uint)) private _textsId;
+  mapping(uint => Text) private _textsData;
+  uint private _countId;
 
   constructor() ERC721("Words Token", "WRD") {
     
   }
-  
-  modifier onlyTextOwner(uint id) {
-    require(msg.sender == ownerOf(id), "SmartWords: function reserved to owner of this text");
-    _;
+
+  function idOf(address owner, uint position) public view returns (uint) {
+    require(position != 0, "SmartsWords: cannot read at position 0");
+    return _textsId[owner][position];
+  }
+  function textOf(address owner, uint position) public view returns (Text memory) {
+    return _textsData[idOf(owner, position)];
+  }
+  function textContentOf(address owner, uint position) public view returns (string memory) {
+    return _textsData[idOf(owner, position)].text;
+  }
+  function textAuthorOf(address owner, uint position) public view returns (address) {
+    return _textsData[idOf(owner, position)].author;
+  }
+  function textTimestampOf(address owner, uint position) public view returns (uint) {
+    return _textsData[idOf(owner, position)].timestamp;
+  }
+  function textKeyOf(address owner, uint position) public view returns(bytes32) {
+    return _textsData[idOf(owner, position)].key;
   }
 
-  function textContent(uint id_) public view returns(string memory) {
-    return _texts[id_].text;
+  function write(string memory text, uint position) public returns (bool) {
+    require(position != 0, "SmartsWords: cannot write at position 0");
+    require(_textsId[msg.sender][position] == 0, "SmartsWords: position already have a text");
+    _createText(msg.sender, position, text, _countId);
+    _mint(msg.sender, _countId);
+    _countId++;
+    return true;
   }
-  function textAuthor(uint id_) public view returns(address) {
-    return _texts[id_].author;
-  }
-  function textOwner(uint id_) public view returns(address) {
-    return ownerOf(id_);
-  }
-  function textTimestamp(uint id_) public view returns (uint) {
-    return _texts[id_].timestamp;
-  }
-  function textKey(uint id_) public view returns(bytes32) {
-    return _texts[id_].key;
-  }
-
-
-
-  function write(string memory text_) public {
-    _mint(msg.sender, _id);
-    _createText(_id, text_);
-    _id++;
+  function transferOwnership(address newOwner, uint position) public returns (bool) {
+    require(msg.sender == ownerOf(idOf(msg.sender, position)), "SmartsWords: sender is not owner of this nft");
+    uint id = idOf(msg.sender, position);
+    _textsId[msg.sender][position] = 0;
+    _textsId[newOwner][balanceOf(newOwner) + 1] = id;
+    _transfer(msg.sender, newOwner, idOf(msg.sender, position));
+    return true;
   }
 
-  function edit(uint id_, string memory text_) public onlyTextOwner(id_) {
-    _createText(id_, text_);
-  }
-
-  function _createText(uint id_, string memory text_) private {
-    _texts[id_] = Text({
-      text: text_,
-      author: msg.sender,
+  function _createText(address sender, uint position, string memory text, uint id) private returns (bool) {
+    _textsId[sender][position] = id;
+    _textsData[id] = Text({
+      text: text,
+      author: sender,
       timestamp: block.timestamp,
+      id: id,
       key: keccak256("KEY")
     });
+    return true;
   }
 }
