@@ -19,7 +19,9 @@ contract SmartWords is ERC721 {
   constructor() ERC721("Words Token", "WRD") {
     
   }
-
+  function nftCreated() public view returns (uint) {
+    return _countId;
+  }
   function idOf(address owner, uint position) public view returns (uint) {
     require(position != 0, "SmartsWords: cannot read at position 0");
     return _textsId[owner][position];
@@ -43,17 +45,18 @@ contract SmartWords is ERC721 {
   function write(string memory text, uint position) public returns (bool) {
     require(position != 0, "SmartsWords: cannot write at position 0");
     require(_textsId[msg.sender][position] == 0, "SmartsWords: position already have a text");
+    _countId++;
     _createText(msg.sender, position, text, _countId);
     _mint(msg.sender, _countId);
-    _countId++;
     return true;
   }
+
   function transferOwnership(address newOwner, uint position) public returns (bool) {
     require(msg.sender == ownerOf(idOf(msg.sender, position)), "SmartsWords: sender is not owner of this nft");
     uint id = idOf(msg.sender, position);
     _textsId[msg.sender][position] = 0;
     _textsId[newOwner][balanceOf(newOwner) + 1] = id;
-    _transfer(msg.sender, newOwner, idOf(msg.sender, position));
+    _transfer(msg.sender, newOwner, id);
     return true;
   }
 
