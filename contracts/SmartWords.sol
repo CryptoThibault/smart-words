@@ -4,6 +4,7 @@ pragma solidity ^0.8.5;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 struct Text {
+  string title;
   string text;
   address author;
   uint timestamp;
@@ -28,6 +29,9 @@ contract SmartWords is ERC721 {
   function textOf(address owner, uint position) public view returns (Text memory) {
     return _textsData[idOf(owner, position)];
   }
+  function textTitleOf(address owner, uint position) public view returns (string memory) {
+    return _textsData[idOf(owner, position)].title;
+  }
   function textContentOf(address owner, uint position) public view returns (string memory) {
     return _textsData[idOf(owner, position)].text;
   }
@@ -41,11 +45,11 @@ contract SmartWords is ERC721 {
     return _textsData[idOf(owner, position)].key;
   }
 
-  function write(string memory text, uint position) public returns (bool) {
+  function write(string memory title, string memory text, uint position) public returns (bool) {
     require(position != 0, "SmartsWords: cannot write at position 0");
     require(_textsId[msg.sender][position] == 0, "SmartsWords: position already have a text");
     _countId++;
-    _createText(msg.sender, position, text, _countId);
+    _createText(msg.sender, position, title, text, _countId);
     _mint(msg.sender, _countId);
     return true;
   }
@@ -74,13 +78,18 @@ contract SmartWords is ERC721 {
     return true;
   }
 
-  function _createText(address sender, uint position, string memory text, uint id) private returns (bool) {
+  function _baseURI() internal pure override returns (string memory) {
+    return "https://";
+  }
+
+  function _createText(address sender, uint position, string memory title, string memory text, uint id) private returns (bool) {
     _textsId[sender][position] = id;
     _textsData[id] = Text({
+      title: title,
       text: text,
       author: sender,
       timestamp: block.timestamp,
-      key: keccak256("KEY")
+      key: keccak256("key")
     });
     return true;
   }
