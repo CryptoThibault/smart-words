@@ -7,7 +7,8 @@ describe('SmartsWords', async function () {
   const SYMBOL = 'WRD';
   const TITLE = 'Test String';
   const TEXT = 'Hello World!';
-  const POSITION = 1;
+  const POSITION = 3;
+  const NEW_POSITION = 5;
   const ID = 1;
   beforeEach(async function () {
     [dev, alice, bob] = await ethers.getSigners();
@@ -47,16 +48,29 @@ describe('SmartsWords', async function () {
       expect(await smartWords.ownerOf(ID)).to.equal(alice.address);
     });
   });
+  describe('Change Position', async function () {
+    beforeEach(async function () {
+      await smartWords.connect(alice).write(TITLE, TEXT, POSITION);
+      await smartWords.connect(alice).changePosition(POSITION, NEW_POSITION);
+    });
+    it('should asign id of the struct at good position', async function () {
+      expect(await smartWords.idOf(alice.address, NEW_POSITION)).to.equal(ID);
+    });
+    it('should asign good text content at struct', async function () {
+      expect(await smartWords.textContentOf(alice.address, NEW_POSITION)).to.equal(TEXT);
+    });
+  });
   describe('Transfer Ownership', async function () {
     beforeEach(async function () {
       await smartWords.connect(alice).write(TITLE, TEXT, POSITION);
       await smartWords.connect(alice).transferOwnership(bob.address, POSITION);
+      await smartWords.connect(bob).changePosition(await smartWords.balanceOf(bob.address), NEW_POSITION);
     });
     it('should asign id of the struct at good position', async function () {
-      expect(await smartWords.idOf(bob.address, POSITION)).to.equal(ID);
+      expect(await smartWords.idOf(bob.address, NEW_POSITION)).to.equal(ID);
     });
     it('should asign good text content at struct', async function () {
-      expect(await smartWords.textContentOf(bob.address, POSITION)).to.equal(TEXT);
+      expect(await smartWords.textContentOf(bob.address, NEW_POSITION)).to.equal(TEXT);
     });
     it('should change ownership of nft', async function () {
       expect(await smartWords.ownerOf(ID)).to.equal(bob.address);
@@ -65,5 +79,4 @@ describe('SmartsWords', async function () {
       expect(await smartWords.balanceOf(bob.address)).to.equal(1);
     });
   });
-  describe('Change Position', async function () {});
 });

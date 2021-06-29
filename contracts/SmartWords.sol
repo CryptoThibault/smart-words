@@ -16,9 +16,8 @@ contract SmartWords is ERC721 {
   mapping(uint => Text) private _textsData;
   uint private _countId;
 
-  constructor() ERC721("Words Token", "WRD") {
-    
-  }
+  constructor() ERC721("Words Token", "WRD") {}
+  
   function nftCreated() public view returns (uint) {
     return _countId;
   }
@@ -71,8 +70,8 @@ contract SmartWords is ERC721 {
     return true;
   }
 
-  function changePosition(address owner, uint position, uint newPosition) public returns (bool) {
-    uint id = idOf(owner, position);
+  function changePosition(uint position, uint newPosition) public returns (bool) {
+    uint id = idOf(msg.sender, position);
     _textsId[msg.sender][position] = 0;
     _textsId[msg.sender][newPosition] = id;
     return true;
