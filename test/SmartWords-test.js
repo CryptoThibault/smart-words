@@ -2,14 +2,15 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
 describe('SmartsWords', async function () {
-  let SmartWords, smartWords, dev, alice;
+  let SmartWords, smartWords, dev, alice, bob;
   const NAME = 'Words Token';
   const SYMBOL = 'WRD';
   const TITLE = 'Test String';
   const TEXT = 'Hello World!';
   const POSITION = 1;
+  const ID = 1;
   beforeEach(async function () {
-    [dev, alice] = await ethers.getSigners();
+    [dev, alice, bob] = await ethers.getSigners();
     SmartWords = await ethers.getContractFactory('SmartWords');
     smartWords = await SmartWords.connect(dev).deploy();
     await smartWords.deployed();
@@ -25,7 +26,7 @@ describe('SmartsWords', async function () {
       await smartWords.connect(alice).write(TITLE, TEXT, POSITION);
     });
     it('should asign id of the struct at good position', async function () {
-      expect(await smartWords.idOf(alice.address, POSITION)).to.equal(await smartWords.nftCreated());
+      expect(await smartWords.idOf(alice.address, POSITION)).to.equal(ID);
     });
     it('should asign good title at struct', async function () {
       expect(await smartWords.textTitleOf(alice.address, POSITION)).to.equal(TITLE);
@@ -37,15 +38,32 @@ describe('SmartsWords', async function () {
       expect(await smartWords.textAuthorOf(alice.address, POSITION)).to.equal(alice.address);
     });
     it('should asign good timestamp at struct', async function () {
-      expect(await smartWords.textTimestampOf(alice.address, POSITION)).to.above(1);
+      expect(await smartWords.textTimestampOf(alice.address, POSITION)).to.above(10000);
     });
     it('should mint good amount of nft', async function () {
       expect(await smartWords.balanceOf(alice.address)).to.equal(1);
     });
     it('should mint nft for good user', async function () {
-      expect(await smartWords.ownerOf(1)).to.equal(alice.address);
+      expect(await smartWords.ownerOf(ID)).to.equal(alice.address);
     });
   });
-  describe('Transfer Ownership', async function () {});
+  describe('Transfer Ownership', async function () {
+    beforeEach(async function () {
+      await smartWords.connect(alice).write(TITLE, TEXT, POSITION);
+      await smartWords.connect(alice).transferOwnership(bob.address, POSITION);
+    });
+    it('should asign id of the struct at good position', async function () {
+      expect(await smartWords.idOf(bob.address, POSITION)).to.equal(ID);
+    });
+    it('should asign good text content at struct', async function () {
+      expect(await smartWords.textContentOf(bob.address, POSITION)).to.equal(TEXT);
+    });
+    it('should change ownership of nft', async function () {
+      expect(await smartWords.ownerOf(ID)).to.equal(bob.address);
+    });
+    it('should transfer good amount of nft', async function () {
+      expect(await smartWords.balanceOf(bob.address)).to.equal(1);
+    });
+  });
   describe('Change Position', async function () {});
 });
